@@ -1,10 +1,11 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 
 #include <UniDx/Image.h>
 #include <UniDx/D3DManager.h>
 #include <UniDx/Canvas.h>
 #include <UniDx/Material.h>
 #include <UniDx/Shader.h>
+#include <UniDx/ConstantBuffer.h>
 
 using namespace DirectX;
 
@@ -22,19 +23,8 @@ constexpr Vector2 image_uvs[] = {
 
 namespace UniDx {
 
-// -----------------------------------------------------------------------------
-// ’¸“_ƒVƒF[ƒ_[‘¤‚Æ‹¤—L‚·‚éAƒ‚ƒfƒ‹ƒrƒ…[s—ñ‚Ì’è”ƒoƒbƒtƒ@
-//     UniDx‚Å‚Í‚·‚×‚Ä‚ÌƒVƒF[ƒ_[‚ÅƒXƒƒbƒg0”Ô‚É‹¤’Ê‚Åw’è‚·‚é
-// -----------------------------------------------------------------------------
-struct VSConstantBuffer0
-{
-    Matrix world;
-    Matrix view;
-    Matrix projection;
-};
 
-
-// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 Image::Image()
 {
 	mesh = make_unique<SubMesh>();
@@ -47,13 +37,13 @@ void Image::OnEnable()
 {
 	UIBehaviour::OnEnable();
 
-	// s—ñ—p‚Ì’è”ƒoƒbƒtƒ@¶¬
+	// è¡Œåˆ—ç”¨ã®å®šæ•°ãƒãƒƒãƒ•ã‚¡ç”Ÿæˆ
 	D3D11_BUFFER_DESC desc{};
-	desc.ByteWidth = sizeof(VSConstantBuffer0);
+	desc.ByteWidth = sizeof(ConstantBufferPerObject);
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.CPUAccessFlags = 0;
 	desc.Usage = D3D11_USAGE_DEFAULT;
-	D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBuffer0.GetAddressOf());
+	D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBufferPerObject.GetAddressOf());
 
 	mesh->positions = std::span<const Vector3>(image_positions, std::size(image_positions));
 	mesh->uv = std::span<const Vector2>(image_uvs, std::size(image_uvs));
@@ -82,18 +72,18 @@ void Image::Render(const Matrix& proj) const
 		owner->getDefaultTextureMaterial()->setForRender();
 	}
 
-	// ’è”ƒoƒbƒtƒ@
-	ID3D11Buffer* cbs[1] = { constantBuffer0.Get() };
-	D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(0, 1, cbs);
+	// å®šæ•°ãƒãƒƒãƒ•ã‚¡
+	ID3D11Buffer* cbs[1] = { constantBufferPerObject.Get() };
+	D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(CB_PerObject, 1, cbs);
 
-	// „Ÿ ƒ[ƒ‹ƒhs—ñ‚ğˆÊ’u‚É‡‚í‚¹‚Äì¬
-	VSConstantBuffer0 cb{};
+	// â”€ ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ã‚’ä½ç½®ã«åˆã‚ã›ã¦ä½œæˆ
+	ConstantBufferPerObject cb{};
 	cb.world = transform->getLocalToWorldMatrix();
 	cb.view = Matrix::Identity;
 	cb.projection = proj;
 
-	// ’è”ƒoƒbƒtƒ@XV
-	D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBuffer0.Get(), 0, nullptr, &cb, 0, 0);
+	// å®šæ•°ãƒãƒƒãƒ•ã‚¡æ›´æ–°
+	D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBufferPerObject.Get(), 0, nullptr, &cb, 0, 0);
 
 	mesh->Render();
 }

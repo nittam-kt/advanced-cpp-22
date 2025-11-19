@@ -71,7 +71,7 @@ public:
         return ptr;
     }
     template<typename TVertex>
-    static std::unique_ptr<CubeRenderer> create(std::shared_ptr<Material> material)
+    static std::unique_ptr<SphereRenderer> create(std::shared_ptr<Material> material)
     {
         auto ptr = std::unique_ptr<SphereRenderer>(new SphereRenderer());
         ptr->AddMaterial(material);

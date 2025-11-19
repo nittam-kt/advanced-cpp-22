@@ -60,7 +60,7 @@ public:
     virtual void OnEnable();
 
 protected:
-    ComPtr<ID3D11Buffer> constantBuffer1;
+    ComPtr<ID3D11Buffer> constantBufferPerMaterial;
     ComPtr<ID3D11DepthStencilState> depthStencilState;
     ComPtr<ID3D11BlendState> blendState;
 

@@ -55,9 +55,12 @@ unique_ptr<GameObject> createMap(GameObject* player)
 
     // マテリアルの作成
     auto wallMat = std::make_shared<Material>();
+    auto floorMat = std::make_shared<Material>();
 
     // シェーダを指定してコンパイル
     wallMat->shader.compile<VertexPNT>(L"Resource/AlbedoShade.hlsl");
+    floorMat->shader.compile<VertexPNT>(L"Resource/SimpleShade.hlsl");
+    floorMat->color = Color(0.85f, 0.8f, 0.85f);
 
     // 壁テクスチャ作成
     auto wallTex = std::make_shared<Texture>();
@@ -115,12 +118,6 @@ unique_ptr<GameObject> createMap(GameObject* player)
                     L"Resource/AlbedoShade.hlsl",
                     enemyTex);
 
-                // マテリアルカラーを半透明にする
-                for (auto& mat : model->GetMaterials())
-                {
-                    mat->color = Color(1, 1, 1, 0.3f);
-                }
-
                 enemy->transform->localPosition = Vector3(
                     i * 2 - float(MapData::getInstance()->getWidth() / 2) * 2,
                     -0.5f,
@@ -135,6 +132,26 @@ unique_ptr<GameObject> createMap(GameObject* player)
 
             default:
                 break;
+            }
+
+            // 床
+            {
+                auto rb = make_unique<Rigidbody>();
+                rb->gravityScale = 0;
+                rb->mass = numeric_limits<float>::infinity();
+                auto floor = make_unique<GameObject>(L"床",
+                    CubeRenderer::create<VertexPNT>(floorMat),
+                    move(rb),
+                    make_unique<AABBCollider>());
+                floor->transform->localScale = Vector3(2, 1, 2);
+                floor->transform->localPosition = Vector3(
+                    i * 2 - float(MapData::getInstance()->getWidth() / 2) * 2,
+                    -1.5f,
+                    j * -2 + float(MapData::getInstance()->getHeight() / 2) * 2
+                );
+
+                // 壁の親をマップにする
+                Transform::SetParent(move(floor), map->transform);
             }
         }
     }
@@ -160,17 +177,10 @@ unique_ptr<Scene> CreateDefaultScene()
     playerObj->transform->localPosition = Vector3(0, -1, 0);
     playerObj->transform->localRotation = Quaternion::CreateFromYawPitchRoll(XM_PI, 0, 0);
 
-    // -- 床 --
-    // キューブレンダラを作ってサイズを調整
-    auto rb = make_unique<Rigidbody>();
-    rb->gravityScale = 0;
-    rb->mass = numeric_limits<float>::infinity();
-    auto floor = make_unique<GameObject>(L"床",
-        CubeRenderer::create<VertexPNT>(L"Resource/AlbedoShade.hlsl", L"Resource/brick-1.png"),
-        move(rb),
-        make_unique<AABBCollider>());
-    floor->transform->localPosition = Vector3(0.0f, -1.5f, 0.0f);
-    floor->transform->localScale = Vector3(26, 1, 26);
+    // ボール
+    auto ball = make_unique<GameObject>(L"ボール", Vector3(0, 2, 1),
+        SphereRenderer::create<VertexPN>(L"Resource/VertexTest.hlsl"));
+    ball->transform->localScale = Vector3(3, 3, 3);
 
     // -- カメラ --
     auto cameraBehaviour = make_unique<CameraBehaviour>();
@@ -204,7 +214,7 @@ unique_ptr<Scene> CreateDefaultScene()
         make_unique<GameObject>(L"オブジェクトルート",
             move(playerObj),
             move(map),
-            move(floor)
+            move(ball)
         ),
 
         move(light),

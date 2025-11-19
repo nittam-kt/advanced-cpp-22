@@ -2,6 +2,7 @@
 #include <UniDx/D3DManager.h>
 
 #include <windows.h>
+#include <UniDx/ConstantBuffer.h>
 
 namespace UniDx{
 
@@ -163,6 +164,14 @@ bool D3DManager::Initialize(HWND hWnd, int width, int height)
 	screenSize.y = float(height);
 	currentRenderingMode = RenderingMode_Opaque;
 
+	// フレームごとにGPUで共通利用する定数バッファ
+	D3D11_BUFFER_DESC desc{};
+	desc.ByteWidth = sizeof(ConstantBufferPerFrame);
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBufferPerFrame.GetAddressOf());
+
 	return true;
 }
 
@@ -176,5 +185,27 @@ void D3DManager::Clear(float r, float g, float b, float a)
 	m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	m_context->OMSetRenderTargets(1, m_renderTarget.GetAddressOf(), m_depthStencilView.Get());
 }
+
+
+// フレーム単位の定数バッファを更新
+void D3DManager::UpdateConstantBufferPerFrame()
+{
+	// 時間に関わる time, unscaledDeltaTime, 1/unscaledDeltaTime, frameCount を送信
+	constexpr float minDt = 1.0f / 600.0f;
+	float dt = std::max(Time::unscaledDeltaTime, minDt);
+
+	ConstantBufferPerFrame cb{};
+	cb.time.x = Time::time;
+	cb.time.y = dt;
+	cb.time.z = 1.0f / dt;
+	cb.time.w = Time::frameCount;
+
+	// 定数バッファ更新
+	ID3D11Buffer* cbs[1] = { constantBufferPerFrame.Get() };
+	D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(CB_PerFrame, 1, cbs);
+	D3DManager::getInstance()->GetContext()->PSSetConstantBuffers(CB_PerFrame, 1, cbs);
+	D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBufferPerFrame.Get(), 0, nullptr, &cb, 0, 0);
+}
+
 
 } // UniDx

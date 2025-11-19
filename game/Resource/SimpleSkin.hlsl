@@ -1,13 +1,13 @@
 // ----------------------------------------------------------
 // 頂点
 // ----------------------------------------------------------
-cbuffer ParentConstants : register(b0)
+cbuffer ParentConstants : register(b9)
 {
     float4x4 world;     // 親ノードのワールド変換行列
     float4x4 view;
     float4x4 projection;
 };
-cbuffer LocalConstants : register(b1)
+cbuffer LocalConstants : register(b10)
 {
     float4x4 local;     // 子ノードのローカル変換行列
 }

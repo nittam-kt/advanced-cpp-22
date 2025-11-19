@@ -23,11 +23,11 @@ void Renderer::OnEnable()
 
     // 行列用の定数バッファ生成
     D3D11_BUFFER_DESC desc{};
-    desc.ByteWidth = sizeof(VSConstantBuffer0);
+    desc.ByteWidth = sizeof(ConstantBufferPerObject);
     desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     desc.CPUAccessFlags = 0;
     desc.Usage = D3D11_USAGE_DEFAULT;
-    D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBuffer0.GetAddressOf());
+    D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBufferPerObject.GetAddressOf());
 }
 
 
@@ -37,15 +37,15 @@ void Renderer::OnEnable()
 void Renderer::updatePositionCameraCBuffer(const UniDx::Camera& camera) const
 {
     // ワールド行列を transform から合わせて作成
-    VSConstantBuffer0 cb{};
+    ConstantBufferPerObject cb{};
     cb.world = transform->getLocalToWorldMatrix();
     cb.view = camera.GetViewMatrix();
     cb.projection = camera.GetProjectionMatrix(16.0f/9.0f);
 
     // 定数バッファ更新
-    ID3D11Buffer* cbs[1] = { constantBuffer0.Get() };
-    D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(0, 1, cbs);
-    D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBuffer0.Get(), 0, nullptr, &cb, 0, 0);
+    ID3D11Buffer* cbs[1] = { constantBufferPerObject.Get() };
+    D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(CB_PerObject, 1, cbs);
+    D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBufferPerObject.Get(), 0, nullptr, &cb, 0, 0);
 }
 
 

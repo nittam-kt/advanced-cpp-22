@@ -59,7 +59,7 @@ public:
     }
 
 protected:
-    ComPtr<ID3D11Buffer> constantBuffer0;
+    ComPtr<ID3D11Buffer> constantBufferPerObject;
 
     virtual void OnEnable() override;
     virtual void updatePositionCameraCBuffer(const UniDx::Camera& camera) const;

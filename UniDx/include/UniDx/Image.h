@@ -25,7 +25,7 @@ public:
 	void SetColor(Color c) { std::fill(colors.begin(), colors.end(), c); }
 
 private:
-	ComPtr<ID3D11Buffer> constantBuffer0;
+	ComPtr<ID3D11Buffer> constantBufferPerObject;
 	std::unique_ptr<SubMesh> mesh;
 	std::vector<Color> colors;
 };

@@ -98,13 +98,13 @@ bool Material::setForRender() const
     D3DManager::getInstance()->GetContext()->OMSetBlendState(blendState.Get(), NULL, 0xffffffff);
 
     // 定数バッファ更新
-    VSConstantBuffer1 cb{};
+    ConstantBufferPerMaterial cb{};
     cb.baseColor = color;
 
-    ID3D11Buffer* cbs[1] = { constantBuffer1.Get() };
-    D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(1, 1, cbs);
-    D3DManager::getInstance()->GetContext()->PSSetConstantBuffers(1, 1, cbs);
-    D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBuffer1.Get(), 0, nullptr, &cb, 0, 0);
+    ID3D11Buffer* cbs[1] = { constantBufferPerMaterial.Get() };
+    D3DManager::getInstance()->GetContext()->VSSetConstantBuffers(CB_PerMaterial, 1, cbs);
+    D3DManager::getInstance()->GetContext()->PSSetConstantBuffers(CB_PerMaterial, 1, cbs);
+    D3DManager::getInstance()->GetContext()->UpdateSubresource(constantBufferPerMaterial.Get(), 0, nullptr, &cb, 0, 0);
 
     return true;
 }
@@ -139,11 +139,11 @@ void Material::OnEnable()
 
     // マテリアル用の定数バッファ生成
     D3D11_BUFFER_DESC desc{};
-    desc.ByteWidth = sizeof(VSConstantBuffer1);
+    desc.ByteWidth = sizeof(ConstantBufferPerMaterial);
     desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     desc.CPUAccessFlags = 0;
     desc.Usage = D3D11_USAGE_DEFAULT;
-    D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBuffer1.GetAddressOf());
+    D3DManager::getInstance()->GetDevice()->CreateBuffer(&desc, nullptr, constantBufferPerMaterial.GetAddressOf());
 }
 
 

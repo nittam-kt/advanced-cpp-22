@@ -221,6 +221,9 @@ void Engine::lateUpdate()
 //
 void Engine::render()
 {
+    // フレーム単位の定数バッファ更新
+    D3DManager::getInstance()->UpdateConstantBufferPerFrame();
+
     // ライトバッファの更新と転送
     LightManager::getInstance()->updateLightCBuffer();
 
@@ -229,7 +232,6 @@ void Engine::render()
     {
         // 不透明描画
         D3DManager::getInstance()->setCurrentCurrentRenderingMode(RenderingMode_Opaque);
-
 
         // 各コンポーネントの Render
         for (auto& it : SceneManager::getInstance()->GetActiveScene()->GetRootGameObjects())

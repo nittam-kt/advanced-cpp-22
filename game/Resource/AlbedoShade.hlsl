@@ -3,7 +3,7 @@
 // ----------------------------------------------------------
 
 // 行列定数バッファ
-cbuffer VSConstants : register(b0)
+cbuffer VSConstants : register(b9)
 {
     float4x4 world;
     float4x4 view;
@@ -51,7 +51,7 @@ PSInput VS(VSInput vin)
 // ----------------------------------------------------------
 
 // マテリアル定数バッファ
-cbuffer PSConstants : register(b1)
+cbuffer PSConstants : register(b10)
 {
     float4 baseColor;
 };
