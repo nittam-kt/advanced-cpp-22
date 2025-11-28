@@ -40,29 +40,29 @@ public:
         return static_cast<float>(v) / static_cast<float>(0xFFFFFF); // 0xFFFFFF == 2^24-1
     }
 
-    // [min, max) のfloat乱数（最大値含まない、UnityのRangeと同じ挙動）
+    // [min, max] のfloat乱数（最大値含む、Unity互換）
     float Range(float min, float max)
-    {
-        return min + (max - min) * value();
-    }
-
-    // [min, max) のint乱数（最大値含まない、UnityのRangeと同じ挙動）
-    int Range(int min, int max)
-    {
-        return min + static_cast<int>(nextUInt64() % static_cast<uint64_t>(max - min));
-    }
-
-    // [min, max] のfloat乱数（最大値含む）
-    float RangeInclusive(float min, float max)
     {
         // value()は1.0を含むのでそのまま
         return min + (max - min) * value();
     }
 
-    // [min, max] のint乱数（最大値含む）
-    int RangeInclusive(int min, int max)
+    // [min, max] のint乱数（最大値含む、Unityと異なる挙動に注意！）
+    int Range(int min, int max)
     {
         return min + static_cast<int>(nextUInt64() % (static_cast<uint64_t>(max - min + 1)));
+    }
+
+    // [min, max) のfloat乱数（最大値含まない）
+    float RangeExclusive(float min, float maxExclusive)
+    {
+        return min + (maxExclusive - min) * value();
+    }
+
+    // [min, max) のint乱数（最大値含まない）
+    int RangeExclusive(int min, int maxExclusive)
+    {
+        return min + static_cast<int>(nextUInt64() % static_cast<uint64_t>(maxExclusive - min));
     }
 
     // -1.0～1.0のfloat乱数
@@ -96,6 +96,46 @@ public:
             if (len2 <= 1.0f)
                 return Vector2(x, y);
         }
+    }
+
+    // 単位球面上のランダムな点（表面上、均一分布）
+    Vector3 onUnitSphere()
+    {
+        while(true)
+        {
+            float x = symmetricValue();
+            float y = symmetricValue();
+            float z = symmetricValue();
+            float len2 = x * x + y * y + z * z;
+            if (len2 <= 1.0f && len2 > 0.0f)
+            {
+                float invLen = 1.0f / std::sqrt(len2);
+                return Vector3(x * invLen, y * invLen, z * invLen);
+            }
+        }
+    }
+
+    // 一様分布の回転（単位四元数）を返す
+    DirectX::SimpleMath::Quaternion rotationUniform()
+    {
+        // Shoemake のアルゴリズムに基づく一様な単位四元数生成
+        // u1, u2, u3 を [0,1] から取り、以下の変換で一様な方向を得る
+        float u1 = value();
+        float u2 = value();
+        float u3 = value();
+
+        float sqrt1MinusU1 = std::sqrt(1.0f - u1);
+        float sqrtU1 = std::sqrt(u1);
+
+        float theta1 = XM_2PI * u2;
+        float theta2 = XM_2PI * u3;
+
+        float x = sqrt1MinusU1 * std::sinf(theta1);
+        float y = sqrt1MinusU1 * std::cosf(theta1);
+        float z = sqrtU1 * std::sinf(theta2);
+        float w = sqrtU1 * std::cosf(theta2);
+
+        return DirectX::SimpleMath::Quaternion(x, y, z, w);
     }
 
 private:
